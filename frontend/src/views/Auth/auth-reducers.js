@@ -8,11 +8,25 @@ const { REGISTER_USER, LOGIN_USER, VERIFY_TOKEN, LOGOUT_USER } = actionConstants
 
 const token = (state = defaultState.set('data', store.get('token') || null), action) => {
   state = getApiReducer(VERIFY_TOKEN)(state, action);
-  if (action.type === `${VERIFY_TOKEN}_SUCCESS`) {
-    state = state.set('data', action.json.token);
-  }
 
-  return state;
+  switch (action.type) {
+    case `${REGISTER_USER}_SUCCESS`:
+    case `${LOGIN_USER}_SUCCESS`:
+      store.set('token', action.json.token);
+      state = state.merge({
+        loaded: true,
+        loading: false,
+        data: action.json.token,
+      });
+      return state;
+
+    case `${VERIFY_TOKEN}_SUCCESS`:
+      store.set('token', action.json.token);
+      return state;
+
+    default:
+      return state;
+  }
 };
 
 const user = (state = defaultState, action) => {
@@ -21,11 +35,6 @@ const user = (state = defaultState, action) => {
   state = getApiReducer(VERIFY_TOKEN)(state, action);
 
   switch (action.type) {
-    case `${REGISTER_USER}_SUCCESS`:
-    case `${LOGIN_USER}_SUCCESS`:
-      store.set('token', action.json.token);
-      return state;
-
     case `${REGISTER_USER}_FAILURE`:
     case `${LOGIN_USER}_FAILURE`:
     case LOGOUT_USER:
